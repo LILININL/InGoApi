@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"fristGoproject/internal/auth"
+	"fristGoproject/internal/httpapi/dto"
 )
 
 // AuthHandler รับผิดชอบจัดการเส้นทางที่เกี่ยวกับการยืนยันตัวตนทั้งหมด
@@ -24,11 +25,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-		Name     string `json:"name"`
-	}
+	var body dto.RegisterRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "เนื้อหาไม่ใช่ JSON ที่ถูกต้อง", http.StatusBadRequest)
@@ -55,10 +52,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	var body dto.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "เนื้อหาไม่ใช่ JSON ที่ถูกต้อง", http.StatusBadRequest)
@@ -85,11 +79,7 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var body struct {
-		Email       string `json:"email"`
-		OldPassword string `json:"old_password"`
-		NewPassword string `json:"new_password"`
-	}
+	var body dto.ChangePasswordRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "เนื้อหาไม่ใช่ JSON ที่ถูกต้อง", http.StatusBadRequest)
