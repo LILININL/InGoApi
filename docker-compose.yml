@@ -1,0 +1,29 @@
+services:
+  ingoapi:
+    container_name: ingoapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # ปรับค่าตามฐานข้อมูลที่ต้องการใช้
+      DATABASE_URL: postgres://in:in@postgres:5432/lindb
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: lin-go-db
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: in
+      POSTGRES_PASSWORD: in
+      POSTGRES_DB: lindb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

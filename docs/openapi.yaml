@@ -1,0 +1,146 @@
+openapi: 3.1.0
+info:
+  title: Auth API
+  version: "1.0.0"
+  description: |
+    เอกสารอธิบาย API สำหรับสมัครสมาชิก, ล็อกอิน และเปลี่ยนรหัสผ่าน
+servers:
+  - url: http://localhost:8080
+paths:
+  /auth/register:
+    post:
+      summary: สมัครสมาชิกใหม่
+      description: สร้างผู้ใช้ใหม่ด้วยอีเมล รหัสผ่าน และชื่อ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        "201":
+          description: สมัครสมาชิกสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: ข้อมูลไม่ถูกต้อง
+        "409":
+          description: อีเมลถูกใช้งานแล้ว
+  /auth/login:
+    post:
+      summary: เข้าสู่ระบบ
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: ล็อกอินสำเร็จ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: ข้อมูลไม่ถูกต้อง
+        "401":
+          description: อีเมลหรือรหัสผ่านไม่ถูกต้อง
+  /auth/change-password:
+    post:
+      summary: เปลี่ยนรหัสผ่าน
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        "200":
+          description: เปลี่ยนรหัสผ่านสำเร็จ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: ข้อมูลไม่ถูกต้อง
+        "401":
+          description: รหัสผ่านเดิมไม่ถูกต้อง
+  /users:
+    get:
+      summary: ดึงรายชื่อผู้ใช้ทั้งหมด
+      description: คืนข้อมูลผู้ใช้ทุกคนที่มีในระบบ (เฉพาะข้อมูลที่ปลอดภัย)
+      responses:
+        "200":
+          description: รายการผู้ใช้
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        "500":
+          description: มีข้อผิดพลาดจากฝั่งเซิร์ฟเวอร์
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: secret123
+        name:
+          type: string
+          example: User Name
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: secret123
+    ChangePasswordRequest:
+      type: object
+      required: [email, old_password, new_password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        old_password:
+          type: string
+          format: password
+          example: secret123
+        new_password:
+          type: string
+          format: password
+          example: newSecret456
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
