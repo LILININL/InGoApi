@@ -10,7 +10,7 @@ paths:
   /auth/register:
     post:
       summary: สมัครสมาชิกใหม่
-      description: สร้างผู้ใช้ใหม่ด้วยอีเมล รหัสผ่าน และชื่อ
+      description: สร้างผู้ใช้ใหม่ด้วย email (plain), password (SHA-256) และ name (plain)
       requestBody:
         required: true
         content:
@@ -90,7 +90,7 @@ components:
   schemas:
     RegisterRequest:
       type: object
-      required: [email, password]
+      required: [email, password, name]
       properties:
         email:
           type: string
@@ -98,8 +98,8 @@ components:
           example: user@example.com
         password:
           type: string
-          format: password
-          example: secret123
+          description: SHA-256 hex ของรหัสผ่านที่ฝั่ง client แปลงมาก่อน
+          example: 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
         name:
           type: string
           example: User Name
@@ -113,8 +113,8 @@ components:
           example: user@example.com
         password:
           type: string
-          format: password
-          example: secret123
+          description: SHA-256 hex ของรหัสผ่านที่ฝั่ง client แปลงมาก่อน
+          example: 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
     ChangePasswordRequest:
       type: object
       required: [email, old_password, new_password]
@@ -122,15 +122,14 @@ components:
         email:
           type: string
           format: email
-          example: user@example.com
         old_password:
           type: string
-          format: password
-          example: secret123
+          description: SHA-256 hex ของรหัสผ่านเดิม
+          example: 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
         new_password:
           type: string
-          format: password
-          example: newSecret456
+          description: SHA-256 hex ของรหัสผ่านใหม่
+          example: 9f1c03b6505539029a6029eaeb9a7b8a44d10ac69f71f4b77e7d3edb3e9f1d27
     User:
       type: object
       properties:

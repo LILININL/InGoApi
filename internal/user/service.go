@@ -21,9 +21,9 @@ func (s *Service) List(ctx context.Context) ([]User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ดึงรายชื่อผู้ใช้: %w", err)
 	}
-	// ไม่ต้องเปิดเผย password hash
-	for i := range users {
-		users[i].PasswordHash = ""
-	}
+
+	// for i := range users {
+	// 	users[i].PasswordHash = ""
+	// }
 	return users, nil
 }

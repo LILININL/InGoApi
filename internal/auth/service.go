@@ -30,10 +30,11 @@ func NewService(repo user.Repository) *Service {
 }
 
 // Register สมัครสมาชิกใหม่และคืนข้อมูล user (ไม่รวม password hash)
-// rawPassword ควรเป็นรหัสผ่านที่ client เข้ารหัส (เช่น SHA-256) มาแล้ว ก่อนถูก Argon2 เก็บในฐาน
+// rawPassword ควรเป็นสตริง SHA-256 hex ที่ client แปลงมาก่อน (หรือรูปแบบที่เตรียมไว้)
 func (s *Service) Register(ctx context.Context, email, rawPassword, name string) (user.User, error) {
 	email = strings.TrimSpace(strings.ToLower(email))
 	rawPassword = strings.TrimSpace(rawPassword)
+	name = strings.TrimSpace(name)
 	if email == "" || rawPassword == "" {
 		return user.User{}, errors.New("email และ password ต้องไม่ว่าง")
 	}
@@ -54,6 +55,8 @@ func (s *Service) Register(ctx context.Context, email, rawPassword, name string)
 		PasswordHash: hash,
 		Name:         name,
 	}
+
+
 
 	if err := s.users.Create(ctx, newUser); err != nil {
 		return user.User{}, fmt.Errorf("สร้างผู้ใช้: %w", err)

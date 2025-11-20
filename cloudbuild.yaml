@@ -1,0 +1,39 @@
+steps:
+  # Build Docker image for the API and tag with commit SHA and latest.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/fristgo-repo/fristgoproject-ingoapi:$SHORT_SHA
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/fristgo-repo/fristgoproject-ingoapi:latest
+      - .
+
+  # Push the image to Artifact Registry.
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - us-central1-docker.pkg.dev/$PROJECT_ID/fristgo-repo/fristgoproject-ingoapi:$SHORT_SHA
+
+  # Deploy the new image to Cloud Run.
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - fristgoapi
+      - --image
+      - us-central1-docker.pkg.dev/$PROJECT_ID/fristgo-repo/fristgoproject-ingoapi:$SHORT_SHA
+      - --region
+      - us-central1
+      - --platform
+      - managed
+      - --allow-unauthenticated
+      - --port
+      - "8080"
+      - --add-cloudsql-instances
+      - whylin:us-central1:whylinapi
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+

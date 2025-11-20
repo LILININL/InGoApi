@@ -1,9 +1,12 @@
 package httpapi
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
+
 	"fristGoproject/internal/auth"
 	"fristGoproject/internal/httpapi/dto"
 )
@@ -32,7 +35,19 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.service.Register(r.Context(), body.Email, body.Password, body.Name)
+	email := strings.TrimSpace(body.Email)
+	name := strings.TrimSpace(body.Name)
+	if email == "" || name == "" {
+		http.Error(w, "email และ name ต้องไม่ว่าง", http.StatusBadRequest)
+		return
+	}
+	passwordHex, ok := normalizeSHA256Hex(body.Password)
+	if !ok {
+		http.Error(w, "password ต้องเป็น SHA-256 hex 64 ตัวอักษร", http.StatusBadRequest)
+		return
+	}
+
+	u, err := h.service.Register(r.Context(), email, passwordHex, name)
 	if err != nil {
 		status := http.StatusBadRequest
 		if errors.Is(err, auth.ErrEmailInUse) {
@@ -59,7 +74,18 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.service.Login(r.Context(), body.Email, body.Password)
+	email := strings.TrimSpace(body.Email)
+	if email == "" {
+		http.Error(w, "email ต้องไม่ว่าง", http.StatusBadRequest)
+		return
+	}
+	passwordHex, ok := normalizeSHA256Hex(body.Password)
+	if !ok {
+		http.Error(w, "password ต้องเป็น SHA-256 hex 64 ตัวอักษร", http.StatusBadRequest)
+		return
+	}
+
+	u, err := h.service.Login(r.Context(), email, passwordHex)
 	if err != nil {
 		status := http.StatusBadRequest
 		if errors.Is(err, auth.ErrInvalidCredentials) {
@@ -86,7 +112,23 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.ChangePassword(r.Context(), body.Email, body.OldPassword, body.NewPassword); err != nil {
+	email := strings.TrimSpace(body.Email)
+	if email == "" {
+		http.Error(w, "email ต้องไม่ว่าง", http.StatusBadRequest)
+		return
+	}
+	oldPassword, ok := normalizeSHA256Hex(body.OldPassword)
+	if !ok {
+		http.Error(w, "old_password ต้องเป็น SHA-256 hex 64 ตัวอักษร", http.StatusBadRequest)
+		return
+	}
+	newPassword, ok := normalizeSHA256Hex(body.NewPassword)
+	if !ok {
+		http.Error(w, "new_password ต้องเป็น SHA-256 hex 64 ตัวอักษร", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.ChangePassword(r.Context(), email, oldPassword, newPassword); err != nil {
 		status := http.StatusBadRequest
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			status = http.StatusUnauthorized
@@ -105,4 +147,18 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
+}
+
+func normalizeSHA256Hex(input string) (string, bool) {
+	value := strings.TrimSpace(input)
+	value = strings.TrimPrefix(value, "0x")
+	value = strings.TrimPrefix(value, "0X")
+	value = strings.ToLower(value)
+	if len(value) != 64 {
+		return "", false
+	}
+	if _, err := hex.DecodeString(value); err != nil {
+		return "", false
+	}
+	return value, true
 }

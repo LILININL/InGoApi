@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_USER
+              value: "in"
+            - name: POSTGRES_PASSWORD
+              value: "in"
+            - name: POSTGRES_DB
+              value: "lindb"
+          ports:
+            - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingoapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingoapi
+  template:
+    metadata:
+      labels:
+        app: ingoapi
+    spec:
+      containers:
+        - name: ingoapi
+          image: luilin/fristgoproject-ingoapi:latest
+          env:
+            - name: DATABASE_URL
+              value: "postgres://in:in@postgres:5432/lindb"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingoapi
+spec:
+  selector:
+    app: ingoapi
+  ports:
+    - port: 8080
+      targetPort: 8080
